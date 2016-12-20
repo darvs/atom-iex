@@ -23,10 +23,13 @@
   'cmd-alt-o': 'iex:gotoDefinition'
   'cmd-alt-x': 'iex:run-tests'
   'cmd-alt-j': 'iex:run-test'
-  'cmd-alt-b': 'iex:pipe'
+  'cmd-alt-b': 'iex:pipeSelection'
+  'cmd-alt-n': 'iex:pipeLine'
   'cmd-alt-y': 'iex:say-yes'
+  'ctrl-l': 'iex:clear'
 
 '.iex':
   'cmd-v': 'iex:paste'
   'ctrl-v': 'iex:paste'
   'cmd-c': 'iex:copy'
+  'ctrl-l': 'iex:clear'

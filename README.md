@@ -52,7 +52,9 @@ Customizing Key Bindings:
   'cmd-alt-o': 'iex:gotoDefinition'
   'cmd-alt-x': 'iex:run-tests'
   'cmd-alt-j': 'iex:run-test'
-  'cmd-alt-b': 'iex:pipe'
+  'cmd-alt-b': 'iex:pipeSelection'
+  'ctrl-l': iex:clear'
+
 ```
 
 Adding these will provide the following:
@@ -72,8 +74,10 @@ Adding these will provide the following:
 | `cmd + alt + j` | `iex:run-test` | Run the test in which the cursor lies |
 | `cmd + alt + h` | `iex:help` | Print the docstring for the function or module under the cursor |
 | `cmd + alt + o` | `iex:gotoDefinition`| Jump to the definition of the function or module under the cursor |
-| `cmd + alt + b` | `iex:pipe` | Pipe the currently selected text to the REPL and execute it |
+| `cmd + alt + b` | `iex:pipeSelection` | Pipe the currently selected text to the REPL and execute it. If nothing is selected, the whole buffer will be piped and executed. |
+| `cmd + alt + n` | `iex:pipeLine` | Pipe the current line to the REPL and execute it. |
 | `cmd + alt + p` | `iex:pretty-print` | Pretty print the last evaluated expression |
+| `ctrl + l` | `iex:clear` | Clear the IEx pane |
 
 ### Fonts
 The REPL defaults to using the same font family/size as Atom. Independent settings for the REPL will be available in the next release.

@@ -12,6 +12,7 @@ capitalize = (str)-> str[0].toUpperCase() + str[1..].toLowerCase()
 paneChanged = (pane)-> console.log("Pane changed")
 
 module.exports = Iex =
+  testFile: null
   subscriptions: null
   termViews: []
   focusedTerminal: off
@@ -29,6 +30,9 @@ module.exports = Iex =
       type: 'boolean'
       default: yes
     openPanesInSameSplit:
+      type: 'boolean'
+      default: no
+    bufferShouldBeSavedWhenExecutingEntireFile:
       type: 'boolean'
       default: no
     colors:
@@ -91,7 +95,9 @@ module.exports = Iex =
     ['up', 'right', 'down', 'left'].forEach (direction)=>
         @subscriptions.add atom.commands.add 'atom-workspace',"iex:open-split-#{direction}", @splitTerm.bind(this, direction)
     @subscriptions.add atom.commands.add 'atom-workspace', 'iex:open': => @newIEx()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'iex:pipe': => @pipeIEx()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'iex:clear': => @clearIEx()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'iex:pipeSelection': => @pipeSelectionIEx()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'iex:pipeLine': => @pipeLineIEx()
     @subscriptions.add atom.commands.add 'atom-workspace', 'iex:help': => @printHelp()
     @subscriptions.add atom.commands.add 'atom-workspace', 'iex:run-all-tests': => @runAllTests()
     @subscriptions.add atom.commands.add 'atom-workspace', 'iex:run-tests': => @runTests()
@@ -179,6 +185,15 @@ module.exports = Iex =
     editor = atom.workspace.getActiveTextEditor()
     if editor
       path = editor.getBuffer().file.path
+      if path.endsWith("_test.exs")
+        @testFile = path
+      else
+        if @testFile != null
+          testEditor = (someEditor for someEditor in atom.workspace.getTextEditors() when someEditor.buffer.file.path == @testFile)
+          if testEditor.length != 0
+            console.log(testEditor)
+            editor = testEditor[0]
+            path = @testFile
       line_num = editor.getCursorBufferPosition().toArray()[0] + 1
       text = "AtomIEx.run_test(\""
       text = text.concat(path).concat("\",").concat(line_num).concat(")\n")
@@ -302,26 +317,31 @@ module.exports = Iex =
     item = pane.addItem termView
     pane.activateItem item
 
-  pipeIEx: ->
+  clearIEx: ->
+    @runCommand('clear\n')
+
+  pipeSelectionIEx: ->
     editor = atom.workspace.getActiveTextEditor()
     if editor
-      action = 'selection'
-      stream = switch action
-        when 'path'
-          editor.getBuffer().file.path
-        when 'selection'
-          editor.getSelectedText()
+      stream = editor.getSelectedText()
+      unless stream
+        buffer = editor.getBuffer()
+        if buffer.getPath() and buffer.isModified() and atom.config.get('iex.bufferShouldBeSavedWhenExecutingEntireFile')
+          editor.save()
+        stream = editor.getText()
+      @pipeIEx(stream)
 
-      if stream and @focusedTerminal
-        if Array.isArray @focusedTerminal
-          [pane, item] = @focusedTerminal
-          pane.activateItem item
-        else
-          item = @focusedTerminal
+  pipeLineIEx: ->
+    editor = atom.workspace.getActiveTextEditor()
+    if editor
+        buffer = editor.getBuffer()
+        position = editor.getCursorBufferPosition()
+        if buffer and position
+          lineText = buffer.lineForRow(position.row)
+          @pipeIEx(lineText)
 
-        text = stream.trim().concat("\n")
-        item.term.send(text)
-        item.term.focus()
+  pipeIEx: (stream)->
+    @runCommand(stream.trim().concat("\n"))
 
   handleRemoveTerm: (termView)->
     @termViews.splice @termViews.indexOf(termView), 1
